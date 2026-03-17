@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian OS Mini - Vizitka</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.45);
+            --border: rgba(255, 255, 255, 0.6);
+            --text-main: #1e293b;
+            --text-sub: #475569;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            margin: 0; 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg-gradient); 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+        
+        .blob { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 1; opacity: 0.5; animation: float 15s infinite alternate ease-in-out; }
+        .blob-1 { width: 400px; height: 400px; background: #c084fc; top: -100px; left: -100px; }
+        .blob-2 { width: 450px; height: 450px; background: #818cf8; bottom: -150px; right: -150px; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            100% { transform: translate(40px, 40px) rotate(15deg) scale(1.1); }
+        }
+
+        .glass-card { 
+            position: relative; 
+            z-index: 10; 
+            background: var(--card-bg); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--border); 
+            border-radius: 40px; 
+            padding: 50px 25px; 
+            width: 100%; 
+            max-width: 380px; 
+            text-align: center; 
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.15);
+            animation: cardAppear 1s cubic-bezier(0.2, 1, 0.2, 1);
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(50px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo-container { width: 110px; height: 110px; margin: 0 auto 25px; position: relative; }
+        .profile-pic { 
+            width: 100%; height: 100%; 
+            background: white; 
+            border-radius: 35px; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 45px; color: #334155; 
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            object-fit: cover;
+            overflow: hidden;
+        }
+
+        h1 { margin: 0 0 10px; font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1px; line-height: 1.1; }
+        p.subtitle { margin: 0 0 35px; font-size: 16px; color: var(--text-sub); font-weight: 500; opacity: 0.9; }
+        
+        .actions-row { 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-bottom: 35px; 
+            width: 100%;
+        }
+        .action-btn { 
+            flex: 1;
+            max-width: 145px;
+            padding: 14px 10px; 
+            border-radius: 20px; 
+            border: none; 
+            background: #0f172a; 
+            color: white; 
+            cursor: pointer;
+            font-size: 13px; 
+            font-weight: 700; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px;
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2);
+            white-space: nowrap;
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px -5px rgba(15, 23, 42, 0.3); }
+        .action-btn.secondary { 
+            background: white; 
+            color: #0f172a; 
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05); 
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .services-section { text-align: left; margin-bottom: 35px; }
+        .service-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+        .service-card { 
+            background: rgba(255, 255, 255, 0.5); 
+            padding: 16px; border-radius: 20px; margin-bottom: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: 0.3s;
+        }
+        .s-name { font-weight: 700; font-size: 15px; color: #1e293b; }
+        .s-desc { font-size: 13px; color: #64748b; line-height: 1.4; }
+        .s-price { font-weight: 800; color: #6366f1; font-size: 14px; margin-top: 8px; }
+
+        .buttons-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px; }
+        .btn { 
+            display: flex; align-items: center; justify-content: center; gap: 14px; 
+            width: 100%; padding: 18px; 
+            border-radius: 22px; text-decoration: none; 
+            background: rgba(255, 255, 255, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 1); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            font-weight: 600; font-size: 17px; 
+            color: #1e293b;
+        }
+        .btn:hover { transform: translateY(-5px) scale(1.03); background: #fff; }
+
+        .qr-section { padding-top: 35px; border-top: 2px solid rgba(255,255,255,0.3); }
+        .qr-code { background: white; padding: 15px; border-radius: 30px; display: inline-block; }
+        .qr-code img { display: block; border-radius: 15px; width: 140px; height: 140px; }
+        .qr-text { font-size: 14px; color: var(--text-sub); margin-bottom: 15px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="glass-card">
+        <div class="logo-container">
+            <div id="profileImage" class="profile-pic">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+        </div>
+        
+        <h1 id="displayName">Yulklanmoqda...</h1>
+        <p class="subtitle" id="displaySubtitle">...</p>
+
+        <div class="actions-row">
+            <button class="action-btn" onclick="saveVCard()"><i class="fa-solid fa-user-plus"></i> Saqlash</button>
+            <button class="action-btn secondary" onclick="copyURL()"><i class="fa-solid fa-copy"></i> Ulashish</button>
+        </div>
+
+        <div id="servicesContainer" style="text-align: left; margin-bottom: 30px;"></div>
+
+        <div id="buttonsContainer" class="buttons-grid"></div>
+
+        <div class="qr-section">
+            <div class="qr-text">Kontaktni saqlash uchun skanerlang</div>
+            <div class="qr-code"><img id="qr-image" src="" alt="QR"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG START ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl02Ql56-IiDhgO4EgCJJ4JBGn06d9nNI",
+            authDomain: "obsidian-os-mini.firebaseapp.com",
+            databaseURL: "https://obsidian-os-mini-default-rtdb.firebaseio.com",
+            projectId: "obsidian-os-mini",
+            storageBucket: "obsidian-os-mini.firebasestorage.app",
+            messagingSenderId: "831047629315",
+            appId: "1:831047629315:web:78873df1139c3910602c36"
+        };
+        // --- FIREBASE CONFIG END ---
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const iconMap = {
+            'telegram': 'fa-brands fa-telegram',
+            'instagram': 'fa-brands fa-instagram',
+            'phone': 'fa-solid fa-phone',
+            'location': 'fa-solid fa-location-dot',
+            'website': 'fa-solid fa-globe',
+            'youtube': 'fa-brands fa-youtube',
+            'facebook': 'fa-brands fa-facebook',
+            'tiktok': 'fa-brands fa-tiktok',
+            'linkedin': 'fa-brands fa-linkedin'
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('s');
+        let globalData = null;
+        
+        if(slug) {
+            db.ref('projects/' + slug).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    globalData = data;
+                    if(data.theme) document.body.style.background = data.theme;
+                    document.getElementById('displayName').innerText = data.companyName;
+                    document.getElementById('displaySubtitle').innerText = data.subtitle;
+
+                    const profileDiv = document.getElementById('profileImage');
+                    if(data.logoUrl && data.logoUrl.trim() !== "") {
+                        profileDiv.innerHTML = `<img src="${data.logoUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
+                    const sContainer = document.getElementById('servicesContainer');
+                    if(data.services && data.services.length > 0) {
+                        sContainer.innerHTML = `<div class="service-title"><i class="fa-solid fa-briefcase"></i> Xizmatlarimiz</div>`;
+                        data.services.forEach(s => {
+                            sContainer.innerHTML += `
+                                <div class="service-card">
+                                    <div class="s-name">${s.title}</div>
+                                    <div class="s-desc">${s.desc}</div>
+                                    ${s.price ? `<div class="s-price">${s.price}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+
+                    const bContainer = document.getElementById('buttonsContainer');
+                    if(data.links) {
+                        data.links.forEach((link, idx) => {
+                            const iconClass = iconMap[link.type] || 'fa-solid fa-link';
+                            const colorClass = `color-${link.type}`;
+                            const a = document.createElement('a');
+                            a.href = link.url;
+                            a.className = `btn ${colorClass}`;
+                            a.target = "_blank";
+                            a.style.animation = `cardAppear 0.5s ease forwards ${0.3 + (idx * 0.1)}s`;
+                            a.style.opacity = '0';
+                            a.innerHTML = `<i class="${iconClass}"></i> ${link.label}`;
+                            bContainer.appendChild(a);
+                        });
+                    }
+
+                    const vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${data.companyName}\nORG:${data.companyName}\nTITLE:${data.subtitle}\n${data.links ? data.links.map(l => `URL:${l.url}`).join('\n') : ''}\nEND:VCARD`;
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(vCard)}`;
+                    document.getElementById('qr-image').src = qrUrl;
+                } else {
+                    showError();
+                }
+            });
+        } else {
+            showError();
+        }
+
+        function showError() {
+            document.getElementById('displayName').innerText = "Loyiha topilmadi";
+            document.getElementById('displaySubtitle').innerText = "Admin panelda loyiha yarating.";
+            document.querySelector('.actions-row').style.display = 'none';
+        }
+
+        function saveVCard() {
+            if(!globalData) return;
+            const vCardData = `BEGIN:VCARD\nVERSION:3.0\nFN:${globalData.companyName}\nORG:${globalData.companyName}\nTITLE:${globalData.subtitle}\n${globalData.links ? globalData.links.map(l => `URL:${l.url}`).join('\n') : ''}\nEND:VCARD`;
+            const blob = new Blob([vCardData], { type: "text/vcard" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${globalData.companyName}.vcf`;
+            a.click();
+        }
+
+        function copyURL() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Ssilka nusxalandi!");
+        }
+    </script>
+</body>
+</html>

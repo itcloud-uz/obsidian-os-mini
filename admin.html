@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian OS Mini - Constructor Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; }
+        
+        #loginOverlay { position: fixed; inset: 0; background: #f1f5f9; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: white; padding: 50px 40px; border-radius: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        
+        .admin-nav { background: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 15px rgba(0,0,0,0.03); }
+        .logo-brand { font-size: 22px; font-weight: 800; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .container { max-width: 1100px; margin: 50px auto; padding: 0 20px; }
+        
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .project-card { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; transition: all 0.3s; }
+        .project-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        .project-card h3 { margin: 0 0 10px; font-size: 20px; font-weight: 700; }
+        .project-card .slug { color: #64748b; font-size: 13px; margin-bottom: 25px; font-family: 'Courier New', monospace; background: #f1f5f9; padding: 5px 10px; border-radius: 8px; }
+        
+        #editorView { display: none; background: white; padding: 50px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+        .editor-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .form-group { margin-bottom: 25px; position: relative; }
+        label { display: block; font-weight: 700; margin-bottom: 12px; font-size: 14px; color: #334155; }
+        input, select { width: 100%; padding: 15px 20px; border: 1.5px solid #e2e8f0; border-radius: 16px; font-size: 15px; transition: all 0.2s; background: #fff; box-sizing: border-box; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        
+        .btn { padding: 15px 30px; border-radius: 18px; border: none; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; font-size: 15px; box-sizing: border-box; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); background: #4f46e5; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-danger { background: #fee2e2; color: #ef4444; }
+        .btn-danger:hover { background: #fecaca; }
+        
+        .link-item { 
+            background: #ffffff; 
+            padding: 25px; 
+            border-radius: 24px; 
+            margin-bottom: 20px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr auto; 
+            gap: 20px; 
+            align-items: end; 
+            border: 1.5px solid #e2e8f0; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        
+        .hidden { display: none !important; }
+        h3 { 
+            margin-top: 50px; 
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f1f5f9; 
+            padding-bottom: 15px; 
+            font-weight: 800; 
+            color: #0f172a; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="loginOverlay">
+    <div class="login-card">
+        <div class="logo-brand" style="font-size: 28px; margin-bottom: 30px;">Obsidian OS Mini</div>
+        <div class="form-group">
+            <label>Admin Parol:</label>
+            <input type="password" id="adminPass" placeholder="Parolni kiriting...">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="checkLogin()">Kirish</button>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">Standart parol: 1234</p>
+    </div>
+</div>
+
+<nav class="admin-nav">
+    <div class="logo-brand">Obsidian OS Mini</div>
+    <div id="navActions" class="hidden">
+        <button class="btn btn-secondary" onclick="showDashboard()"><i class="fa-solid fa-house"></i> Dashbord</button>
+        <button class="btn btn-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Dashboard View -->
+    <div id="dashboardView">
+        <div class="dashboard-header">
+            <h2>Loyihalar Dashbordi</h2>
+            <button class="btn btn-primary" onclick="createNewProject()"><i class="fa-solid fa-plus"></i> Yangi Vizitka</button>
+        </div>
+        <div id="projectGrid" class="project-grid">
+            <!-- Loyihalar shu yerga tushadi -->
+            <div style="grid-column: 1/-1; text-align: center; color: #64748b;">Firebase UI yuklanmoqda...</div>
+        </div>
+    </div>
+
+    <!-- Editor View -->
+    <div id="editorView">
+        <div class="editor-header">
+            <button class="btn btn-secondary" onclick="showDashboard()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="editorTitle">Yangi Vizitka</h2>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Loyiha Slugi (URL manzili uchun):</label>
+                <input type="text" id="projectSlug" placeholder="masalan: delta-edu">
+            </div>
+            <div class="form-group">
+                <label>Kompaniya Nomi:</label>
+                <input type="text" id="companyName">
+            </div>
+            <div class="form-group">
+                <label>Kasbi / Slogon:</label>
+                <input type="text" id="subtitle">
+            </div>
+            <div class="form-group">
+                <label>Logo (Fayl yoki URL):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="logoUrl" placeholder="Rasm manzili..." style="flex: 1;">
+                    <input type="file" id="logoUpload" style="display: none;" onchange="handleFileUpload(this)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('logoUpload').click()"><i class="fa-solid fa-upload"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Mavzu Rangini tanlang:</label>
+            <select id="themeSelect">
+                <option value="linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)">Binafsha-Havorang</option>
+                <option value="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)">Dark Night</option>
+                <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">Warm Flame</option>
+                <option value="linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)">Ocean Soft</option>
+                <option value="linear-gradient(135deg, #fa709a 0%, #fee140 100%)">Sunset Glow</option>
+            </select>
+        </div>
+
+        <h3>Xizmatlar</h3>
+        <div id="servicesContainer"></div>
+        <button class="btn btn-secondary" onclick="addService()" style="width: 100%; margin: 10px 0;"><i class="fa-solid fa-cart-plus"></i> Xizmat qo'shish</button>
+
+        <h3>Aloqa Linklari</h3>
+        <div id="linksContainer"></div>
+        <button class="btn btn-secondary" onclick="addLink()" style="width: 100%; margin: 10px 0;"><i class="fa-solid fa-plus"></i> Link qo'shish</button>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <button class="btn btn-primary" style="flex: 2;" onclick="saveProject()"><i class="fa-solid fa-floppy-disk"></i> Loyihani saqlash</button>
+            <button class="btn btn-danger" onclick="deleteProject()"><i class="fa-solid fa-trash"></i> O'chirish</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG START ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAl02Ql56-IiDhgO4EgCJJ4JBGn06d9nNI",
+            authDomain: "obsidian-os-mini.firebaseapp.com",
+            databaseURL: "https://obsidian-os-mini-default-rtdb.firebaseio.com", // Odatda shunday bo'ladi
+            projectId: "obsidian-os-mini",
+            storageBucket: "obsidian-os-mini.firebasestorage.app",
+            messagingSenderId: "831047629315",
+            appId: "1:831047629315:web:78873df1139c3910602c36"
+        };
+        // --- FIREBASE CONFIG END ---
+
+        // Firebase Initializatsiya
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+
+        let projects = {};
+        let currentSlug = null;
+        let currentLinks = [];
+        let currentServices = [];
+
+        // Ma'lumotlarni Firebasedan real-vaqtda olish
+        db.ref('projects').on('value', (snapshot) => {
+            projects = snapshot.val() || {};
+            if(document.getElementById('dashboardView').style.display !== 'none') {
+                renderProjectGrid();
+            }
+        });
+
+        const iconMap = { telegram: 'Telegram', instagram: 'Instagram', phone: 'Telefon', website: 'Sayt', location: 'Manzil' };
+
+        function checkLogin() {
+            const pass = document.getElementById('adminPass').value;
+            if(pass === 'clone1997') { 
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('navActions').classList.remove('hidden');
+                showDashboard();
+            } else {
+                alert('Parol xato!');
+            }
+        }
+
+    function logout() {
+        location.reload();
+    }
+
+    function showDashboard() {
+        document.getElementById('dashboardView').style.display = 'block';
+        document.getElementById('editorView').style.display = 'none';
+        renderProjectGrid();
+    }
+
+    function renderProjectGrid() {
+        const grid = document.getElementById('projectGrid');
+        grid.innerHTML = '';
+        Object.keys(projects).forEach(slug => {
+            const p = projects[slug];
+            grid.innerHTML += `
+                <div class="project-card">
+                    <h3>${p.companyName}</h3>
+                    <div class="slug">vizitka.html?s=${slug}</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="editProject('${slug}')"><i class="fa-solid fa-pen"></i> Tahrirlash</button>
+                        <a href="vizitka.html?s=${slug}" target="_blank" class="btn btn-primary"><i class="fa-solid fa-eye"></i></a>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function createNewProject() {
+        currentSlug = null;
+        currentLinks = [];
+        currentServices = [];
+        document.getElementById('projectSlug').disabled = false;
+        document.getElementById('projectSlug').value = '';
+        document.getElementById('companyName').value = '';
+        document.getElementById('subtitle').value = '';
+        document.getElementById('logoUrl').value = '';
+        document.getElementById('themeSelect').value = 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)';
+        document.getElementById('linksContainer').innerHTML = '';
+        document.getElementById('servicesContainer').innerHTML = '';
+        document.getElementById('editorTitle').innerText = 'Yangi Vizitka';
+        
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('editorView').style.display = 'block';
+    }
+
+    function editProject(slug) {
+        currentSlug = slug;
+        const p = projects[slug];
+        document.getElementById('projectSlug').value = slug;
+        document.getElementById('projectSlug').disabled = true;
+        document.getElementById('companyName').value = p.companyName;
+        document.getElementById('subtitle').value = p.subtitle;
+        document.getElementById('logoUrl').value = p.logoUrl || '';
+        document.getElementById('themeSelect').value = p.theme;
+        
+        currentLinks = p.links || [];
+        currentServices = p.services || [];
+        renderLinks();
+        renderServices();
+        
+        document.getElementById('editorTitle').innerText = 'Tahrirlash: ' + p.companyName;
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('editorView').style.display = 'block';
+    }
+
+    function addService() {
+        currentServices.push({ title: 'Xizmat nomi', desc: 'Qisqacha tavsif...', price: '' });
+        renderServices();
+    }
+
+    function renderServices() {
+        const container = document.getElementById('servicesContainer');
+        container.innerHTML = '';
+        currentServices.forEach((s, i) => {
+            container.innerHTML += `
+                <div class="link-item">
+                    <input type="text" value="${s.title}" placeholder="Xizmat nomi" onchange="updateService(${i}, 'title', this.value)">
+                    <input type="text" value="${s.desc}" placeholder="Tavsif" onchange="updateService(${i}, 'desc', this.value)">
+                    <input type="text" value="${s.price}" placeholder="Narxi (ixtiyoriy)" onchange="updateService(${i}, 'price', this.value)">
+                    <button class="btn-danger btn" onclick="removeService(${i})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+        });
+    }
+
+    function updateService(i, key, val) { currentServices[i][key] = val; }
+    function removeService(i) { currentServices.splice(i, 1); renderServices(); }
+
+    function addLink() {
+        currentLinks.push({ type: 'telegram', label: 'Telegram', url: '' });
+        renderLinks();
+    }
+
+    function renderLinks() {
+        const container = document.getElementById('linksContainer');
+        container.innerHTML = '';
+        currentLinks.forEach((l, i) => {
+            container.innerHTML += `
+                <div class="link-item">
+                    <select onchange="updateLink(${i}, 'type', this.value)">
+                        <option value="telegram" ${l.type==='telegram'?'selected':''}>Telegram</option>
+                        <option value="instagram" ${l.type==='instagram'?'selected':''}>Instagram</option>
+                        <option value="phone" ${l.type==='phone'?'selected':''}>Telefon</option>
+                        <option value="website" ${l.type==='website'?'selected':''}>Veb-sayt</option>
+                    </select>
+                    <input type="text" value="${l.label}" onchange="updateLink(${i}, 'label', this.value)">
+                    <input type="text" value="${l.url}" placeholder="URL..." onchange="updateLink(${i}, 'url', this.value)">
+                    <button class="btn-danger btn" onclick="removeLink(${i})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+        });
+    }
+
+    function updateLink(i, key, val) { currentLinks[i][key] = val; }
+    function removeLink(i) { currentLinks.splice(i, 1); renderLinks(); }
+
+    async function handleFileUpload(input) {
+        if (!input.files || input.files[0] == null) return;
+        
+        const file = input.files[0];
+        const btn = input.nextElementSibling;
+        const icon = btn.querySelector('i');
+        
+        // Visual indicator
+        icon.className = 'fa-solid fa-spinner fa-spin';
+        btn.disabled = true;
+
+        try {
+            const storageRef = storage.ref('logos/' + Date.now() + '_' + file.name);
+            const snapshot = await storageRef.put(file);
+            const url = await snapshot.ref.getDownloadURL();
+            
+            document.getElementById('logoUrl').value = url;
+            alert('Rasm muvaffaqiyatli yuklandi!');
+        } catch (e) {
+            console.error(e);
+            alert('Yuklashda xato: ' + e.message);
+        } finally {
+            icon.className = 'fa-solid fa-upload';
+            btn.disabled = false;
+        }
+    }
+
+    function saveProject() {
+        const slug = document.getElementById('projectSlug').value.trim();
+        if(!slug) return alert('Slugni kiriting!');
+        
+        const projectData = {
+            companyName: document.getElementById('companyName').value,
+            subtitle: document.getElementById('subtitle').value,
+            logoUrl: document.getElementById('logoUrl').value,
+            theme: document.getElementById('themeSelect').value,
+            links: currentLinks,
+            services: currentServices
+        };
+        
+        db.ref('projects/' + slug).set(projectData, (err) => {
+            if(err) {
+                alert('Saqlashda xato: ' + err.message);
+            } else {
+                alert('Muvaffaqiyatli saqlandi!');
+                showDashboard();
+            }
+        });
+    }
+
+    function deleteProject() {
+        if(!currentSlug) return;
+        if(!confirm('Haqiqatdan ham o\'chirmoqchimisiz?')) return;
+        
+        db.ref('projects/' + currentSlug).remove().then(() => {
+            alert('O\'chirildi!');
+            showDashboard();
+        });
+    }
+</script>
+</body>
+</html>
