@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Obsidian OS Mini - Constructor Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -77,24 +78,16 @@
 </head>
 <body>
 
-<!-- Login Overlay -->
-<div id="loginOverlay">
-    <div class="login-card">
-        <div class="logo-brand" style="font-size: 28px; margin-bottom: 30px;">Obsidian OS Mini</div>
-        <div class="form-group">
-            <label>Admin Parol:</label>
-            <input type="password" id="adminPass" placeholder="Parolni kiriting...">
-        </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="checkLogin()">Kirish</button>
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">Standart parol: 1234</p>
-    </div>
-</div>
+<!-- Login Overlay (Removed for Laravel Auth) -->
 
 <nav class="admin-nav">
     <div class="logo-brand">Obsidian OS Mini</div>
-    <div id="navActions" class="hidden">
+    <div id="navActions">
         <button class="btn btn-secondary" onclick="showDashboard()"><i class="fa-solid fa-house"></i> Dashbord</button>
-        <button class="btn btn-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
+        <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+            @csrf
+            <button class="btn btn-danger" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
+        </form>
     </div>
 </nav>
 
@@ -212,61 +205,34 @@
     </div>
 </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    <script>
-        // --- FIREBASE CONFIG START ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAl02Ql56-IiDhgO4EgCJJ4JBGn06d9nNI",
-            authDomain: "obsidian-os-mini.firebaseapp.com",
-            databaseURL: "https://obsidian-os-mini-default-rtdb.firebaseio.com", // Odatda shunday bo'ladi
-            projectId: "obsidian-os-mini",
-            storageBucket: "obsidian-os-mini.firebasestorage.app",
-            messagingSenderId: "831047629315",
-            appId: "1:831047629315:web:78873df1139c3910602c36"
-        };
-        // --- FIREBASE CONFIG END ---
+    let projects = {};
+    let currentSlug = null;
+    let currentLinks = [];
+    let currentServices = [];
+    let currentPortfolio = [];
+    let currentTestimonials = [];
+    let currentFaqs = [];
 
-        // Firebase Initializatsiya
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const storage = firebase.storage();
-
-        let projects = {};
-        let currentSlug = null;
-        let currentLinks = [];
-        let currentServices = [];
-        let currentPortfolio = []; // Yangi o'zgaruvchi
-        let currentTestimonials = [];
-        let currentFaqs = [];
-
-        // Ma'lumotlarni Firebasedan real-vaqtda olish
-        db.ref('projects').on('value', (snapshot) => {
-            projects = snapshot.val() || {};
-            if(document.getElementById('dashboardView').style.display !== 'none') {
+    // Ma'lumotlarni API'dan olish
+    async function loadProjects() {
+        try {
+            const res = await fetch('/projects', { headers: { 'Accept': 'application/json' } });
+            projects = await res.json();
+            if (document.getElementById('dashboardView').style.display !== 'none') {
                 renderProjectGrid();
             }
-        });
-
-        const iconMap = { telegram: 'Telegram', instagram: 'Instagram', phone: 'Telefon', website: 'Sayt', location: 'Manzil' };
-
-        function checkLogin() {
-            const pass = document.getElementById('adminPass').value;
-            if(pass === 'clone1997') { 
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('navActions').classList.remove('hidden');
-                showDashboard();
-            } else {
-                alert('Parol xato!');
-            }
+        } catch (e) {
+            console.error("Xatolik", e);
         }
-
-    function logout() {
-        location.reload();
     }
+    
+    // Initial Load
+    loadProjects();
+
+    const iconMap = { telegram: 'Telegram', instagram: 'Instagram', phone: 'Telefon', website: 'Sayt', location: 'Manzil' };
 
     function showDashboard() {
         document.getElementById('dashboardView').style.display = 'block';
@@ -281,8 +247,8 @@
             const p = projects[slug];
             grid.innerHTML += `
                 <div class="project-card">
-                    <h3>${p.companyName}</h3>
-                    <div class="slug">vizitka.html?s=${slug}</div>
+                    <h3>${p.companyName || 'Nomsiz Loyiha'}</h3>
+                    <div class="slug">/v/${slug}</div>
                     
                     <div style="display: flex; gap: 15px; margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 12px;">
                         <div style="font-size: 14px; color: #475569;">
@@ -295,11 +261,12 @@
 
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-secondary" onclick="editProject('${slug}')"><i class="fa-solid fa-pen"></i> Tahrirlash</button>
-                        <a href="vizitka.html?s=${slug}" target="_blank" class="btn btn-primary"><i class="fa-solid fa-eye"></i></a>
+                        <a href="/v/${slug}" target="_blank" class="btn btn-primary"><i class="fa-solid fa-eye"></i></a>
                     </div>
                 </div>
             `;
         });
+        if(Object.keys(projects).length === 0) grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #64748b;">Hozircha loyihalar yoq...</div>';
     }
 
     function createNewProject() {
@@ -363,7 +330,6 @@
 
     function syncDataFromDOM() {
         try {
-            // Xizmatlarni yig'ish
             currentServices = [];
             document.querySelectorAll('.service-item').forEach(item => {
                 const title = item.querySelector('.s-title')?.value || '';
@@ -372,7 +338,6 @@
                 currentServices.push({ title, desc, price });
             });
 
-            // Linklarni yig'ish
             currentLinks = [];
             document.querySelectorAll('.contact-item').forEach(item => {
                 const type = item.querySelector('.l-type')?.value || 'telegram';
@@ -381,7 +346,6 @@
                 currentLinks.push({ type, label, url });
             });
 
-            // Sharhlarni yig'ish
             currentTestimonials = [];
             document.querySelectorAll('.testimonial-item').forEach(item => {
                 const name = item.querySelector('.t-name')?.value || '';
@@ -390,7 +354,6 @@
                 currentTestimonials.push({ name, text, rating });
             });
 
-            // FAQ yig'ish
             currentFaqs = [];
             document.querySelectorAll('.faq-item').forEach(item => {
                 const q = item.querySelector('.f-q')?.value || '';
@@ -402,16 +365,9 @@
         }
     }
 
-    // Sharhlar (Testimonials) mantig'i
-    function addTestimonial() {
-        syncDataFromDOM();
-        currentTestimonials.push({ name: 'Mijoz Ismi', text: 'Juda zo\'r xizmat!', rating: 5 });
-        renderTestimonials();
-    }
-
+    function addTestimonial() { syncDataFromDOM(); currentTestimonials.push({ name: 'Mijoz Ismi', text: 'Juda zo\'r xizmat!', rating: 5 }); renderTestimonials(); }
     function renderTestimonials() {
-        const cont = document.getElementById('testimonialsContainer');
-        cont.innerHTML = '';
+        const cont = document.getElementById('testimonialsContainer'); cont.innerHTML = '';
         currentTestimonials.forEach((t, i) => {
             cont.innerHTML += `
                 <div class="link-item testimonial-item">
@@ -425,16 +381,9 @@
     }
     function removeTestimonial(i) { syncDataFromDOM(); currentTestimonials.splice(i, 1); renderTestimonials(); }
 
-    // FAQ (Savol-Javob) mantig'i
-    function addFaq() {
-        syncDataFromDOM();
-        currentFaqs.push({ q: 'Savol?', a: 'Javob...' });
-        renderFaqs();
-    }
-
+    function addFaq() { syncDataFromDOM(); currentFaqs.push({ q: 'Savol?', a: 'Javob...' }); renderFaqs(); }
     function renderFaqs() {
-        const cont = document.getElementById('faqContainer');
-        cont.innerHTML = '';
+        const cont = document.getElementById('faqContainer'); cont.innerHTML = '';
         currentFaqs.forEach((f, i) => {
             cont.innerHTML += `
                 <div class="link-item faq-item">
@@ -447,15 +396,9 @@
     }
     function removeFaq(i) { syncDataFromDOM(); currentFaqs.splice(i, 1); renderFaqs(); }
 
-    function addService() {
-        syncDataFromDOM();
-        currentServices.push({ title: 'Xizmat nomi', desc: 'Qisqacha tavsif...', price: '' });
-        renderServices();
-    }
-
+    function addService() { syncDataFromDOM(); currentServices.push({ title: 'Xizmat nomi', desc: 'Qisqacha tavsif...', price: '' }); renderServices(); }
     function renderServices() {
-        const container = document.getElementById('servicesContainer');
-        container.innerHTML = '';
+        const container = document.getElementById('servicesContainer'); container.innerHTML = '';
         currentServices.forEach((s, i) => {
             container.innerHTML += `
                 <div class="link-item service-item">
@@ -467,22 +410,11 @@
             `;
         });
     }
+    function removeService(i) { syncDataFromDOM(); currentServices.splice(i, 1); renderServices(); }
 
-    function removeService(i) { 
-        syncDataFromDOM();
-        currentServices.splice(i, 1); 
-        renderServices(); 
-    }
-
-    function addLink() {
-        syncDataFromDOM();
-        currentLinks.push({ type: 'telegram', label: 'Telegram', url: '' });
-        renderLinks();
-    }
-
+    function addLink() { syncDataFromDOM(); currentLinks.push({ type: 'telegram', label: 'Telegram', url: '' }); renderLinks(); }
     function renderLinks() {
-        const container = document.getElementById('linksContainer');
-        container.innerHTML = '';
+        const container = document.getElementById('linksContainer'); container.innerHTML = '';
         currentLinks.forEach((l, i) => {
             container.innerHTML += `
                 <div class="link-item contact-item">
@@ -499,12 +431,7 @@
             `;
         });
     }
-
-    function removeLink(i) { 
-        syncDataFromDOM();
-        currentLinks.splice(i, 1); 
-        renderLinks(); 
-    }
+    function removeLink(i) { syncDataFromDOM(); currentLinks.splice(i, 1); renderLinks(); }
 
     async function handleFileUpload(input) {
         if (!input.files || input.files[0] == null) return;
@@ -512,43 +439,37 @@
         const file = input.files[0];
         const btn = input.nextElementSibling;
         const icon = btn.querySelector('i');
-        
-        // Visual indicator
-        icon.className = 'fa-solid fa-spinner fa-spin';
-        btn.disabled = true;
+        icon.className = 'fa-solid fa-spinner fa-spin'; btn.disabled = true;
 
+        const formData = new FormData();
+        formData.append('file', file);
         try {
-            const storageRef = storage.ref('logos/' + Date.now() + '_' + file.name);
-            const snapshot = await storageRef.put(file);
-            const url = await snapshot.ref.getDownloadURL();
-            
-            document.getElementById('logoUrl').value = url;
+            const res = await fetch('/upload', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken }, body: formData });
+            const data = await res.json();
+            document.getElementById('logoUrl').value = data.url;
             alert('Rasm muvaffaqiyatli yuklandi!');
         } catch (e) {
-            console.error(e);
             alert('Yuklashda xato: ' + e.message);
         } finally {
-            icon.className = 'fa-solid fa-upload';
-            btn.disabled = false;
+            icon.className = 'fa-solid fa-upload'; btn.disabled = false;
         }
     }
 
-    // Portfolioga rasm yuklash
     async function handlePortfolioUpload(input) {
         if (!input.files || input.files.length === 0) return;
         for(let i=0; i < input.files.length; i++) {
             const file = input.files[i];
-            const storageRef = storage.ref('portfolio/' + Date.now() + '_' + file.name);
-            const snapshot = await storageRef.put(file);
-            const url = await snapshot.ref.getDownloadURL();
-            currentPortfolio.push(url);
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/upload', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken }, body: formData });
+            const data = await res.json();
+            currentPortfolio.push(data.url);
         }
         renderPortfolio();
     }
 
     function renderPortfolio() {
-        const cont = document.getElementById('portfolioContainer');
-        cont.innerHTML = '';
+        const cont = document.getElementById('portfolioContainer'); cont.innerHTML = '';
         currentPortfolio.forEach((url, i) => {
             cont.innerHTML += `
                 <div style="position: relative; width: 80px; height: 80px;">
@@ -559,7 +480,7 @@
         });
     }
 
-    function saveProject() {
+    async function saveProject() {
         try {
             const slug = document.getElementById('projectSlug').value.trim();
             if(!slug) return alert('Slugni kiriting!');
@@ -582,35 +503,45 @@
                 faqs: currentFaqs || []
             };
             
-            console.log("Saqlanayotgan data:", projectData);
+            const btn = document.querySelector('button[onclick="saveProject()"]');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saqlanmoqda...';
 
-            // Xatolik xavfini kamaytirish uchun null/undefined tekshiruvi kiritildi
-            const ref = db.ref('projects/' + slug);
+            const res = await fetch('/projects/' + slug, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify(projectData)
+            });
+            const data = await res.json();
             
-            ref.update(projectData)
-                .then(() => {
-                    alert('Muvaffaqiyatli saqlandi!');
-                    showDashboard();
-                })
-                .catch((err) => {
-                    console.error("Firebase error:", err);
-                    alert('Saqlashda xato: ' + err.message);
-                });
-
+            if(data.success) {
+                alert('Muvaffaqiyatli saqlandi!');
+                loadProjects();
+                showDashboard();
+            } else {
+                alert('Xatolik: ' + data.message);
+            }
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Loyihani saqlash';
         } catch (outerError) {
-            console.error("Save funktsiyasida xato:", outerError);
+            console.error(outerError);
             alert("Kutilmagan xatolik: " + outerError.message);
         }
     }
 
-    function deleteProject() {
+    async function deleteProject() {
         if(!currentSlug) return;
         if(!confirm('Haqiqatdan ham o\'chirmoqchimisiz?')) return;
         
-        db.ref('projects/' + currentSlug).remove().then(() => {
-            alert('O\'chirildi!');
-            showDashboard();
-        });
+        try {
+            const res = await fetch('/projects/' + currentSlug, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } });
+            const data = await res.json();
+            if(data.success) {
+                alert('O\'chirildi!');
+                loadProjects();
+                showDashboard();
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 </script>
 </body>
